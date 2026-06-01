@@ -228,7 +228,7 @@ def graph():
     frame5 = tk.Frame(frame_faders2, bg="#f0f0f0")
     frame5.pack(side=tk.LEFT, padx=10)
     tk.Label(frame5, text="tete::servo 5", font=("Arial", 10), bg="#f0f0f0").pack()
-    scale5 = tk.Scale(frame5, from_=-88, to=88, orient=tk.HORIZONTAL, length=200, command=lambda v:(bouge5(int(v)), set_head_angle(int(v)))) #modifié
+    scale5 = tk.Scale(frame5, from_=-88, to=88, orient=tk.HORIZONTAL, length=200, command=lambda v: bouge5(int(v)))
     scale5.pack()
     sliders.append(scale5)
 
@@ -299,39 +299,6 @@ def print_gris(msg):
 
     
 # ajout perso pour conncter avec server.py 
-"""def move_headLF(angle):
-    try:
-        bouge5(angle)   # servo tête gauche/droite
-    except Exception as e:
-        print("Erreur move_headLF :", e)
-
-def move_headUD(angle):
-    try:
-        bouge6(angle)   # servo tête haut/bas
-    except Exception as e:
-        print("Erreur move_headUD :", e)
-
-
-def move_rightArmSide(angle):
-    try:
-        bouge2(angle)
-    except Exception as e:
-        print("Erreur move_rightArmSide :", e)
-
-
-def move_rightArm(angle):
-    try:
-        bouge1(angle)
-    except Exception as e:
-        print("Erreur move_rightArm :", e)
-
-
-def move_rightLowerArm(angle):
-    try:
-        bouge3(angle)
-    except Exception as e:
-        print("Erreur move_rightLowerArm :", e)"""
-        
 def move_all(a,b,c,d,e,f):
     try:
         bouge(a,b,c,d,e,f)
