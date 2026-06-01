@@ -41,12 +41,15 @@ async def handler(websocket):
             
             
 
-            mbassem.move_headLF(headLF)
-            mbassem.move_headUD(headUD)
+               #mbassem.move_headLF(headLF)
+               #mbassem.move_headUD(headUD)
 
-            mbassem.move_rightArmSide(rightArmSide)
-            mbassem.move_rightArm(rightArm)
-            mbassem.move_rightLowerArm(rightLowerArm)
+               #mbassem.move_rightArmSide(rightArmSide)
+               #mbassem.move_rightArm(rightArm)
+               # mbassem.move_rightLowerArm(rightLowerArm)
+            
+            
+            mbassem.move_all(rightArm,rightArmSide,rightLowerArm,0,headLF,headUD)
             
             print("------------------------------------------------------------------------")
     
