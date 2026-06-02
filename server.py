@@ -60,7 +60,7 @@ def print_slider_change_messages(old_angles, new_angles):
 
     return new_angles
 
-
+# envoi les angles a unity ------------------------------------------------------------------------
 async def broadcast_angles_to_unity(angles):
     """Envoie les angles à tous les clients Unity connectés."""
     message = json.dumps({"type": "angles_update", "angles": angles, "source": "py"})
@@ -74,7 +74,7 @@ async def broadcast_angles_to_unity(angles):
             # Retirer les websockets fermés
             active_websockets.discard(ws)
 
-
+# récupère un json avec les angles depuis unity pour bouger le simulateur -------------------------
 async def handler(websocket):
     global active_websockets
     active_websockets.add(websocket)
