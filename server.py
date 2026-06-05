@@ -4,6 +4,8 @@ import json
 import os
 import mbassem
 
+import Robot_son
+
 ANGLE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "angles.json")
 active_websockets = set()  # Piste les websockets actifs pour envoyer les angles
 
@@ -52,10 +54,11 @@ async def handler(websocket):
         try:
             data = json.loads(message)  # récupère depuis Unity via websocket
             
-            # recevoir le texte envoyé par Unity
+            # recevoir le texte envoyé par Unity (commandes vocales)
             if data.get("type") == "speech":
                 text = data.get("text", "")
-                print("Texte reçu depuis Unity :", text)
+               # await asyncio.to_thread(handle_speech_command, text)
+                handle_speech_command(text)
                 continue
             
             # éviter les boucles : ignorer les messages envoyés par Python
@@ -65,10 +68,10 @@ async def handler(websocket):
             # récupère le json envoyé depuis unity
             headLF = data.get("headLF", 0)
             headUD = data.get("headUD", 0)
-
             rightArmSide = data.get("rightArmSide", 0)
             rightArm = data.get("rightArm", 0)
             rightLowerArm = data.get("rightLowerArm", 0)
+            
 
             # exécution commande
             mbassem.bouge(rightArm, rightArmSide, rightLowerArm, 0, headLF, headUD)
@@ -96,8 +99,14 @@ async def poll_angles_file():
             # Envoyer les nouveaux angles à Unity
             await broadcast_angles_to_unity(new_angles)
 
-
-
+def handle_speech_command(text):
+    """en fonction du texte reçu depuis Unity Bassem répond"""
+    print("Commande vocale reçue :", text)
+    Robot_son.reagir_au_texte(text)
+    
+    
+    
+#------------------------------------------------------------------------------
 async def main():
     server = await websockets.serve(handler, "localhost", 8765)
     print("Serveur lancé")
