@@ -51,7 +51,13 @@ async def handler(websocket):
     async for message in websocket:
         try:
             data = json.loads(message)  # récupère depuis Unity via websocket
-
+            
+            # recevoir le texte envoyé par Unity
+            if data.get("type") == "speech":
+                text = data.get("text", "")
+                print("Texte reçu depuis Unity :", text)
+                continue
+            
             # éviter les boucles : ignorer les messages envoyés par Python
             if data.get("source") == "py":
                 continue
