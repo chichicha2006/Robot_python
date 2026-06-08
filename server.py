@@ -3,6 +3,7 @@ import websockets
 import json
 import os
 import mbassem
+import bassem
 
 import Robot_son
 
@@ -57,6 +58,7 @@ async def handler(websocket):
             # recevoir le texte envoyé par Unity (commandes vocales)
             if data.get("type") == "speech":
                 text = data.get("text", "")
+                asyncio.create_task(asyncio.to_thread(handle_speech_command, text))
                # await asyncio.to_thread(handle_speech_command, text)
                 handle_speech_command(text)
                 continue
@@ -75,6 +77,8 @@ async def handler(websocket):
 
             # exécution commande
             mbassem.bouge(rightArm, rightArmSide, rightLowerArm, 0, headLF, headUD)
+            # pour bouger le vrai robot (en théorie)
+            bassem.bouge(rightArm, rightArmSide, rightLowerArm, 0, headLF, headUD)
             print("------------------------------------------------------------------")
         except Exception as e:
             print("Erreur :", e)
