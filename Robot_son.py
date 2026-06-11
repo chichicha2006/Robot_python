@@ -111,7 +111,7 @@ def get_ip():
         return ""
         
 def mots_interdits(a):
-    vulgaire=["enculé", "enculer", "pute","connard","merde","test controle"]
+    vulgaire=["enculé", "enculer", "pute","connard","merde","test contrôle"]
     wesh = ["wesh", "wech"]
     for element in vulgaire:
         if a in element :
@@ -130,6 +130,9 @@ def reagir_au_texte(texte):
     Fonction appelée par server.py à chaque audio reçu depuis unity puis traduit en texte par reagir_au_wav.
     Elle garde la logique de bassem_son.
     """
+    if mots_interdits(texte):
+        return
+    
     global etat_juke
 
     texte = texte.lower().strip()
@@ -169,10 +172,10 @@ def reagir_au_texte(texte):
         stop()
         parler("Ok, j'arrête.")
 
-    elif "test controle" in texte:
-        avertissement = "❌ grossier personnage. j'ai ton adresse I P ("+get_ip()+"), le login de ton compte utilisateur ("+getpass.getuser()+") et la machine où tu te trouve ("+socket.gethostname()+") . J'envoie tes identifiants et le message que tu as essayé de me faire dire aux services concernés."
-        print(avertissement)
-
+    #elif "test contrôle" in texte:
+     #   avertissement = "❌ grossier personnage. j'ai ton adresse I P ("+get_ip()+"), le login de ton compte utilisateur ("+getpass.getuser()+") et la machine où tu te trouve ("+socket.gethostname()+") . J'envoie tes identifiants et le message que tu as essayé de me faire dire aux services concernés."
+     #   parler(avertissement)
+    
     else:
         parler("Je n'ai pas compris.")
 
