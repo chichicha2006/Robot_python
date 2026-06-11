@@ -23,29 +23,41 @@ engine.setProperty("rate", 200)
 voices = engine.getProperty("voices")
 engine.setProperty("voice", voices[0].id)
 
-text_queue = []
+
+import speech_recognition as sr
+
+recognizer = sr.Recognizer()
+
+def wav_to_text(audio_path):
+    """Transforme un fichier WAV en texte."""
+    try:
+        with sr.AudioFile(audio_path) as source:
+            audio = recognizer.record(source)
+
+        texte = recognizer.recognize_google(audio, language="fr-FR")
+        print("Texte reconnu depuis WAV :", texte)
+        return texte.lower().strip()
+
+    except sr.UnknownValueError:
+        print("Audio incompris")
+        return None
+
+    except sr.RequestError as e:
+        print("Erreur service speech_recognition :", e)
+        return None
+
+
+def reagir_au_wav(audio_path):
+    """Fonction appelée par server.py quand Unity envoie un fichier WAV."""
+    texte = wav_to_text(audio_path)
+
+    if texte:
+        reagir_au_texte(texte)
+    else:
+        parler("Je n'ai pas compris.")
 #-----------------------------------------------------------------------
 # je reprend bassem_son et j'ajoute des print apres parler() dans chaque fonction pour pouvoir tester
 
-
-def recevoir_texte_unity(texte):
-    """Ajoute le texte reçu depuis Unity dans la file."""
-    if texte:
-        text_queue.append(texte.lower().strip())
-
-
-def ecouter():
-    """Remplace l'écoute micro : récupère le prochain texte Unity."""
-    if len(text_queue) == 0:
-        return None
-
-    texte = text_queue.pop(0)
-    #print("Texte Unity utilisé par ecouter() :", texte)
-
-    if mots_interdits(texte):
-        return mots_interdits(texte)
-
-    return texte
 
 
 def parler(text):
@@ -55,11 +67,8 @@ def parler(text):
 
  
 def allo():
-    texte = ecouter()
-    if "bassem" in texte:
         parler("Oué, c'est greg?")
-        print("Oué, c'est greg?")
-
+        
 def musique(a):
     def play():
         pygame.mixer.init()
@@ -67,7 +76,6 @@ def musique(a):
         pygame.mixer.music.play()
         print(f"Lecture de {a} en cours...")
     parler("Pas de soucis, écoute ça")
-    print("Pas de soucis, écoute ça")
     threading.Thread(target=play).start()
 
 def stop():
@@ -81,39 +89,14 @@ def volume(val):
     if pygame.mixer.get_init():
         pygame.mixer.music.set_volume(val)
         parler(f"Volume réglé à {int(val * 100)} %")
-        print("Volume réglé à {int(val * 100)} %")
     else:
         print("La musique n'est pas encore lancée.")
 
+
 def juke():
+    global etat_juke
     parler("Veux-tu écouter de la musique ?")
-    print("Veux-tu écouter de la musique ?")
-    texte = ecouter()
-    if texte and ("oui" in texte or "yes" in texte):
-        parler("Quel genre souhaites-tu écouter ? J'ai du romantique, de la pop, du jazz fusion, du rock.")
-        print("Quel genre souhaites-tu écouter ? J'ai du romantique, de la pop, du jazz fusion, du rock.")
-        texte = ecouter()
-        if "romantique" in texte:
-            musique("son/rizz.mp3")
-            time.sleep(6)
-            #oeil.coeur()
-        elif "pop" in texte:
-            #oeil.base()
-            musique("son/pop.mp3")
-        elif "jazz fusion" in texte:
-           # oeil.croix()
-            musique("son/jazz_fusion.mp3")
-        elif "rock" in texte:
-            #oeil.base()
-            musique("son/lotta.mp3")
-        texte = ecouter()
-        if "stop" in texte:
-            stop()
-            parler("Ok, j'arrête ")
-            print("Ok, j'arrête ")
-    else:
-        parler("pas de musique alors")
-        print("pas de musique alors")
+    etat_juke = 1
         
 
 def get_ip():
@@ -135,22 +118,46 @@ def mots_interdits(a):
             
             avertissement = "❌ grossier personnage. j'ai ton adresse I P ("+get_ip()+"), le login de ton compte utilisateur ("+getpass.getuser()+") et la machine où tu te trouve ("+socket.gethostname()+") . J'envoie tes identifiants et le message que tu as essayé de me faire dire aux services concernés." 
             parler(avertissement)
-            print(avertissement)
             return True
         elif a in wesh:
             parler("on ne dit pas wesh dans une salle de classe")
-            print("on ne dit pas wesh dans une salle de classe")
             return True
     return False
 
+etat_juke = 0
 def reagir_au_texte(texte):
     """
-    Fonction appelée par server.py à chaque texte reçu depuis Unity.
+    Fonction appelée par server.py à chaque audio reçu depuis unity puis traduit en texte par reagir_au_wav.
     Elle garde la logique de bassem_son.
     """
-    recevoir_texte_unity(texte)
+    global etat_juke
 
-    #texte_min = texte.lower().strip()
+    texte = texte.lower().strip()
+
+    if etat_juke == 1:
+        if "oui" in texte or "yes" in texte:
+            parler("Quel genre souhaites-tu écouter ? J'ai du romantique, de la pop, du jazz fusion, du rock.")
+            etat_juke = 2
+            return
+        else:
+            parler("pas de musique alors")
+            etat_juke = 0
+            return
+
+    if etat_juke == 2:
+        if "romantique" in texte:
+            musique("son/rizz.mp3")
+        elif "pop" in texte:
+            musique("son/pop.mp3")
+        elif "jazz" in texte:
+            musique("son/jazz_fusion.mp3")
+        elif "rock" in texte:
+            musique("son/lotta.mp3")
+        else:
+            parler("Je n'ai pas compris le genre de musique.")
+
+        etat_juke = 0
+        return
 
     if "allô bassem" in texte or "bassem" in texte:
         allo()
@@ -162,23 +169,12 @@ def reagir_au_texte(texte):
         stop()
         parler("Ok, j'arrête.")
 
-    elif "pop" in texte:
-        musique("son/pop.mp3")
-
-    elif "rock" in texte:
-        musique("son/lotta.mp3")
-
-    elif "romantique" in texte:
-        musique("son/rizz.mp3")
-
-    elif "jazz" in texte:
-        musique("son/jazz_fusion.mp3")
     elif "test controle" in texte:
-        avertissement = "❌ grossier personnage. j'ai ton adresse I P ("+get_ip()+"), le login de ton compte utilisateur ("+getpass.getuser()+") et la machine où tu te trouve ("+socket.gethostname()+") . J'envoie tes identifiants et le message que tu as essayé de me faire dire aux services concernés." 
+        avertissement = "❌ grossier personnage. j'ai ton adresse I P ("+get_ip()+"), le login de ton compte utilisateur ("+getpass.getuser()+") et la machine où tu te trouve ("+socket.gethostname()+") . J'envoie tes identifiants et le message que tu as essayé de me faire dire aux services concernés."
         print(avertissement)
+
     else:
         parler("Je n'ai pas compris.")
-
 
 
 

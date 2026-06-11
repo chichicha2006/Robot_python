@@ -3,7 +3,8 @@ import websockets
 import json
 import os
 import mbassem
-import bassem
+import base64
+#import bassem
 
 import Robot_son
 
@@ -45,6 +46,26 @@ async def broadcast_angles_to_unity(angles):
             print(f"Erreur envoi à Unity: {e}")
             # Retirer les websockets fermés
             active_websockets.discard(ws)
+            
+# reçois fichier WAV depuis Unity
+def save_audio_from_unity(data):
+    filename = data.get("filename", "unity_audio.wav")
+    audio_base64 = data.get("audioBase64", "")
+
+    if audio_base64 == "":
+        print("Audio reçu vide")
+        return None
+
+    audio_bytes = base64.b64decode(audio_base64)
+
+    audio_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+
+    with open(audio_path, "wb") as f:
+        f.write(audio_bytes)
+
+    print("Fichier audio reçu et sauvegardé :", audio_path)
+
+    return audio_path
 
 # récupère un json avec les angles depuis unity pour bouger le simulateur -------------------------
 async def handler(websocket):
@@ -55,13 +76,15 @@ async def handler(websocket):
         try:
             data = json.loads(message)  # récupère depuis Unity via websocket
             
-            # recevoir le texte envoyé par Unity (commandes vocales)
-            if data.get("type") == "speech":
-                text = data.get("text", "")
-                asyncio.create_task(asyncio.to_thread(handle_speech_command, text))
-               # await asyncio.to_thread(handle_speech_command, text)
-                handle_speech_command(text)
+            # recevoir le fichier wav envoyé par Unity
+            if data.get("type") == "audio":
+                audio_path = save_audio_from_unity(data)
+                
+                if audio_path:
+                    Robot_son.reagir_au_wav(audio_path)
+                    
                 continue
+        
             
             # éviter les boucles : ignorer les messages envoyés par Python
             if data.get("source") == "py":
@@ -78,7 +101,7 @@ async def handler(websocket):
             # exécution commande
             mbassem.bouge(rightArm, rightArmSide, rightLowerArm, 0, headLF, headUD)
             # pour bouger le vrai robot (en théorie)
-            bassem.bouge(rightArm, rightArmSide, rightLowerArm, 0, headLF, headUD)
+          #  bassem.bouge(rightArm, rightArmSide, rightLowerArm, 0, headLF, headUD)
             print("------------------------------------------------------------------")
         except Exception as e:
             print("Erreur :", e)
